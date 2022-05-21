@@ -1,9 +1,3 @@
 [submodule "caravan"]
 	path = caravan
 	url = https://github.com/merledu/caravan
-[submodule "nucleusrv"]
-	path = nucleusrv
-	url = https://github.com/merledu/nucleusrv
-[submodule "jigsaw"]
-	path = jigsaw
-	url = https://github.com/shahzaibk23/jigsaw
