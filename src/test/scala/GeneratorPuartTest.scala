@@ -29,11 +29,11 @@ class GeneratorPuartTest extends FreeSpec with ChiselScalatestTester {
   }
   "P U A R T" in {
     val programFile = getFile
-    test(new GeneratorPuart.Generator(programFile=programFile, GPIO = config("gpio"), UART = config("uart"), SPI = config("spi_flash"), TIMER = config("timer"), I2C = config("i2c"), TL = config("tl"), WB = config("wb"), M = config("m"))).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    test(new GeneratorPuart.Generator(programFile=None, GPIO = config("gpio"), UART = config("uart"), SPI = config("spi_flash"), TIMER = config("timer"), I2C = config("i2c"), TL = config("tl"), WB = config("wb"), M = config("m"))).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
     c.io.CLK_PER_BIT.poke(4.U)
 
 
-    val bufferedSource =  Source.fromFile("/home/talha/abc.txt")
+    val bufferedSource =  Source.fromFile(programFile.get)
     val fileData = bufferedSource.getLines.toArray
     val insts = for (i <- fileData) yield java.lang.Long.parseLong(i.substring(2), 16)
     bufferedSource.close

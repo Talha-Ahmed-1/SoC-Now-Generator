@@ -15,6 +15,7 @@ import jigsaw.fpga.boards.artyA7._
 import jigsaw.rams.fpga.BlockRam
 import jigsaw.peripherals.gpio._
 import jigsaw.peripherals.spiflash._
+import jigsaw.peripherals.spi._
 import jigsaw.peripherals.UART._
 import jigsaw.peripherals.timer._
 import jigsaw.peripherals.i2c._
@@ -241,7 +242,6 @@ class GeneratorWB(programFile: Option[String], GPIO:Boolean = true, UART:Boolean
 var slaves = Seq(gen_dmem_slave, gen_gpio_slave)
 
 if (SPI){
-  implicit val spiConfig = Config()
   val spi = Module(new Spi(new WBRequest(), new WBResponse()))
 
   val gen_spi_slave = Module(new WishboneDevice())
@@ -311,11 +311,11 @@ if (I2C){
   // val imem = Module(BlockRam.createNonMaskableRAM(None, bus=config, rows=1024))
   // val imem = Module(BlockRam.createMaskableRAM(bus=config, rows=1024))
   // val dmem = Module(BlockRam.createMaskableRAM(bus=config, rows=1024))
-  val imem = Module(new SRAM1kb(new WBRequest, new WBResponse))
-  val dmem = Module(new SRAM1kb(new WBRequest, new WBResponse))
+  val imem = Module(new SRAM1kb(new WBRequest, new WBResponse)(programFile = programFile))
+  val dmem = Module(new SRAM1kb(new WBRequest, new WBResponse)(programFile = None))
   
   val wbErr = Module(new WishboneErr())
-  val core = Module(new Core(new WBRequest, new WBResponse)(M = M))
+  val core = Module(new Core(new WBRequest, new WBResponse))
 
 
   val addresses = Seq("h40000000".U(32.W), "h40001000".U(32.W), "h40002000".U(32.W), "h40003000".U(32.W) , "h40004000".U(32.W), "h40005000".U(32.W))
@@ -553,7 +553,6 @@ class GeneratorTL(programFile: Option[String], GPIO:Boolean = true, UART:Boolean
 
 
   if (SPI){
-  implicit val spiConfig = Config()
   val spi = Module(new Spi(new TLRequest(), new TLResponse()))
 
   val gen_spi_slave = Module(new TilelinkDevice())
@@ -629,11 +628,11 @@ if (I2C){
 
   // val imem = Module(BlockRam.createNonMaskableRAM(programFile, bus=config, rows=1024))
   // val dmem = Module(BlockRam.createMaskableRAM(bus=config, rows=1024))
-  val imem = Module(new SRAM1kb(new TLRequest, new TLResponse))
-  val dmem = Module(new SRAM1kb(new TLRequest, new TLResponse))
+  val imem = Module(new SRAM1kb(new TLRequest, new TLResponse)(programFile = programFile))
+  val dmem = Module(new SRAM1kb(new TLRequest, new TLResponse)(programFile = None))
   
   val tlErr = Module(new TilelinkErr())
-  val core = Module(new Core(new TLRequest, new TLResponse)(M = M))
+  val core = Module(new Core(new TLRequest, new TLResponse))
 
 
   val addresses = Seq("h40000000".U(32.W), "h40001000".U(32.W), "h40002000".U(32.W), "h40003000".U(32.W) , "h40004000".U(32.W) , "h40005000".U(32.W))
