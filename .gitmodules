@@ -1,3 +1,11 @@
 [submodule "caravan"]
 	path = caravan
 	url = https://github.com/merledu/caravan
+[submodule "nucleusrv"]
+	path = nucleusrv
+	url = https://github.com/talha-ahmed-1/nucleusrv
+	branch = asic-independent
+[submodule "jigsaw"]
+	path = jigsaw
+	url = https://github.com/talha-ahmed-1/jigsaw
+	branch = independent
