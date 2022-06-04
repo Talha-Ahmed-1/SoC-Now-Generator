@@ -5,7 +5,7 @@ import chiseltest.ChiselScalatestTester
 import chiseltest.internal.VerilatorBackendAnnotation
 import chiseltest.experimental.TestOptionBuilder._
 import org.scalatest.FreeSpec
-import GeneratorPuart.Generator
+// import CaravelTop._
 import scala.io.Source
 
 class CaravelTopTest extends FreeSpec with ChiselScalatestTester {
@@ -29,7 +29,7 @@ class CaravelTopTest extends FreeSpec with ChiselScalatestTester {
   }
   "Caravel Top" in {
     val programFile = getFile
-    test(new GeneratorPuart.CaravelTop(programFile=None, GPIO = config("gpio"), UART = config("uart"), SPI = config("spi_flash"), TIMER = config("timer"), I2C = config("i2c"))).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
+    test(new Caravel.SoCNow(programFile=None, GPIO = config("gpio"), UART = config("uart"), SPI = config("spi_flash"), TIMER = config("timer"), I2C = config("i2c"))).withAnnotations(Seq(VerilatorBackendAnnotation)) {c =>
     c.io.CLK_PER_BIT.poke(4.U)
 
 

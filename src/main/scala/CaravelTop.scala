@@ -1,4 +1,4 @@
-package GeneratorPuart
+package Caravel
 
 import chisel3._
 import chisel3.util.Enum
@@ -22,7 +22,32 @@ import jigsaw.peripherals.i2c._
 import jigsaw.peripherals.programmable_uart._
 import jigsaw.rams.sram._
 
-class CaravelTop(programFile: Option[String], val n:Int = 32, GPIO:Boolean = true, UART:Boolean = true, SPI:Boolean = true, TIMER:Boolean = true, I2C:Boolean = true, M:Boolean = false) extends Module {
+class CaravelTop(programFile: Option[String], val n:Int = 32, GPIO:Boolean = true, UART:Boolean = false, SPI:Boolean = false, TIMER:Boolean = false, I2C:Boolean = false, M:Boolean = false) extends Module {
+  val io = IO(new Bundle {
+    val gpio_o = Output(UInt(n.W))
+    val gpio_en_o = Output(UInt(n.W))
+    val gpio_i = Input(UInt(n.W))
+
+    val rx_i = Input(UInt(1.W))
+    val CLK_PER_BIT = Input(UInt(16.W))
+  })
+
+  val soc = Module(new SoCNow(programFile=None, n=n, GPIO=GPIO, UART=UART, SPI=SPI, TIMER=TIMER, I2C=I2C, M=M))
+  val pll = Module(new PLL_8MHz())
+
+  // pll.io.clk_in1 := clock
+  // soc.clock := pll.io.clk_out1
+
+  io.gpio_o := soc.io.gpio_o
+  io.gpio_en_o := soc.io.gpio_en_o
+  soc.io.gpio_i := io.gpio_i
+
+  soc.io.rx_i := io.rx_i
+  soc.io.CLK_PER_BIT := io.CLK_PER_BIT
+
+}
+
+class SoCNow(programFile: Option[String], val n:Int = 32, GPIO:Boolean = true, UART:Boolean = true, SPI:Boolean = true, TIMER:Boolean = true, I2C:Boolean = true, M:Boolean = false) extends Module {
   val io = IO(new Bundle {
     val gpio_o = Output(UInt(n.W))
     val gpio_en_o = Output(UInt(n.W))
@@ -75,14 +100,14 @@ class CaravelTop(programFile: Option[String], val n:Int = 32, GPIO:Boolean = tru
   // val imem = Module(BlockRam.createNonMaskableRAM(None, bus=config, rows=1024))
   // val imem = Module(BlockRam.createMaskableRAM(bus=config, rows=1024))
   // val dmem = Module(BlockRam.createMaskableRAM(bus=config, rows=1024))
-  val imem = Module(new SRAM1kb(new WBRequest, new WBResponse)(programFile = programFile))
+  val imem = Module(new SRAM1kb(new WBRequest, new WBResponse)(programFile = None))
   val dmem = Module(new SRAM1kb(new WBRequest, new WBResponse)(programFile = None))
   
   val wbErr = Module(new WishboneErr())
   val core = Module(new Core(new WBRequest, new WBResponse))
 
 
-  val addresses = Seq("h00001000".U(32.W), "h00002000".U(32.W)) //, "h40003000".U(32.W), "h40004000".U(32.W) , "h40005000".U(32.W), "h40006000".U(32.W))
+  val addresses = Seq("h40001000".U(32.W), "h40002000".U(32.W)) //, "h40003000".U(32.W), "h40004000".U(32.W) , "h40005000".U(32.W), "h40006000".U(32.W))
   val addressMap = new AddressMap
 
   for (i <- Peripherals.all.indices){
@@ -164,7 +189,7 @@ class CaravelTop(programFile: Option[String], val n:Int = 32, GPIO:Boolean = tru
 
         rx_data_reg                    :=       Mux(puart.io.valid, puart.io.rx_data_o, 0.U)
         //    rx_addr_reg                    :=       Mux(puart.io.valid, puart.io.addr_o << 2, 0.U)    // left shifting address by 2 since uart ctrl sends address in 0,1,2... format but we need it in word aligned so 1 translated to 4, 2 translates to 8 (dffram requirement)
-        rx_addr_reg                    :=       Mux(puart.io.valid, puart.io.addr_o << 2, 0.U)
+        rx_addr_reg                    :=       Mux(puart.io.valid, puart.io.addr_o, 0.U)
     }
     .elsewhen(state === write_iccm){
       // when writing to the iccm state checking if the uart received the ending instruction. If it does then
@@ -250,7 +275,7 @@ class CaravelTop(programFile: Option[String], val n:Int = 32, GPIO:Boolean = tru
 import spray.json._
 import DefaultJsonProtocol._
 
-object GeneratorWBDriver extends App {
+object CaravelDriver extends App {
 
   val file = scala.io.Source.fromFile((os.pwd.toString)+"//src//main//scala//config.json").mkString
 
